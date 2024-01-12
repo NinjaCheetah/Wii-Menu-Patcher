@@ -3,6 +3,7 @@ import os
 import zipfile
 import tarfile
 import subprocess
+import shutil
 from urllib.request import urlopen
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox
@@ -26,6 +27,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.ui.selectWAD_btn.clicked.connect(self.selectWAD_btn_pressed)
         self.ui.downloadTools_btn.clicked.connect(self.downloadTools_btn_pressed)
         self.ui.extract_btn.clicked.connect(self.extract_btn_pressed)
+        self.ui.cleanUp_btn.clicked.connect(self.cleanUp_btn_pressed)
         if os.path.exists(toolsDir):
             if os.path.exists(os.path.join(toolsDir, "Sharpii.exe")) and os.path.exists(os.path.join(toolsDir, "ASH")) and os.path.exists(os.path.join(toolsDir, "ashcompress.exe")):
                 self.ui.status_lbl.setText("Ready. (Tools Ready)")
@@ -107,6 +109,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                           'U8', '-u', 'diskBann.ash.arc', 'diskBann/'])
                 os.remove("diskBann.ash")
                 os.remove("diskBann.ash.arc")
+
+    def cleanUp_btn_pressed(self):
+        if os.path.exists("wad"):
+            shutil.rmtree("wad")
+        if os.path.exists("00000001"):
+            shutil.rmtree("00000001")
+        if os.path.exists("diskBann"):
+            shutil.rmtree("diskBann")
 
     def selectWAD_btn_pressed(self):
         inc_filePath = QFileDialog.getOpenFileName(self, "Open WAD", "", "WAD File (*.wad)")
