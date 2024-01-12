@@ -2,9 +2,10 @@ import sys
 import os
 import zipfile
 import tarfile
+import subprocess
 from urllib.request import urlopen
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog
+from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox
 from PySide6.QtCore import QCoreApplication
 
 from qt.py.ui_MainMenu import Ui_MainWindow
@@ -87,7 +88,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.ui.cleanUp_btn.setEnabled(True)
 
     def extract_btn_pressed(self):
-        print("unimplemented")
+        if wadPath == "":
+            msgBox = QMessageBox()
+            msgBox.setText("Please select a WAD first.")
+            msgBox.exec()
+        else:
+            if os.path.exists("wad"):
+                msgBox = QMessageBox()
+                msgBox.setText("WAD has already been extracted!")
+                msgBox.exec()
+            else:
+                process = subprocess.run(['wine', os.path.join(toolsDir, "Sharpii.exe"), 'WAD', '-u', wadPath, 'wad/'])
+                process = subprocess.run(['wine', os.path.join(toolsDir, "Sharpii.exe"),
+                                          'U8', '-u', 'wad/00000001.app', '00000001/'])
+                os.rename("00000001/layout/common/diskBann.ash", "diskBann.ash")
+                process = subprocess.run([os.path.join(toolsDir, "ASH"), 'diskBann.ash'])
+                process = subprocess.run(['wine', os.path.join(toolsDir, "Sharpii.exe"),
+                                          'U8', '-u', 'diskBann.ash.arc', 'diskBann/'])
+                os.remove("diskBann.ash")
+                os.remove("diskBann.ash.arc")
 
     def selectWAD_btn_pressed(self):
         inc_filePath = QFileDialog.getOpenFileName(self, "Open WAD", "", "WAD File (*.wad)")
