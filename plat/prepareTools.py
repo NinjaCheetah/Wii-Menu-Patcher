@@ -2,24 +2,19 @@ import os
 import sys
 import urllib
 import threading
-from urllib.request import urlopen
-
-from PySide6.QtCore import QThread
 
 
-toolsReady = False
-
-
-def downloadFile(url, filename):
-    with urlopen(url) as r:
-        with open(filename, "wb") as f:
-            f.write(r.read())
-
-
-def downloadFiles(files):
-    for file in files:
-        threading.Thread(target=downloadFile, args=(file[0], file[1])).start()
-
-
-def getOS():
-    return sys.platform.system()
+def getToolsIndex():
+    currentOS = sys.platform.system()
+    if currentOS == "Linux":
+        return [
+            ("https://github.com/mogzol/sharpii/releases/latest/download/Sharpii_v1.7.3.zip", "Sharpii.zip"),
+            ("https://github.com/NinjaCheetah/ASH_Extractor/releases/latest/download/ASH-Linux.tar", "ASH-Linux.tar"),
+            ("https://github.com/NinjaCheetah/ASH_Extractor/releases/latest/download/ashcompress.zip", "ashcompress.zip")
+        ]
+    elif currentOS == "Windows":
+        return [
+            ("https://github.com/mogzol/sharpii/releases/latest/download/Sharpii_v1.7.3.zip", "Sharpii.zip"),
+            ("https://github.com/NinjaCheetah/ASH_Extractor/releases/latest/download/ASH-Windows.zip", "ASH-Windows.zip"),
+            ("https://github.com/NinjaCheetah/ASH_Extractor/releases/latest/download/ashcompress.zip", "ashcompress.zip")
+        ]

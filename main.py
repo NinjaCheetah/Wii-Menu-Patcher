@@ -3,15 +3,16 @@ import os
 import zipfile
 import tarfile
 import hashlib
+import asyncio
 from urllib.request import urlopen
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog
-from PySide6.QtCore import QCoreApplication, QThread
+from PySide6.QtCore import QCoreApplication, QThread, Signal
 
 from qt.py.ui_newui import Ui_MainWindow
 
 from data.sysMenuVersions import getMenuVersionCode, getMenuRegionCode
-from plat.prepareTools import downloadFiles
+from plat.prepareTools import getToolsIndex
 
 wadPath = ""
 wadName = ""
@@ -20,17 +21,33 @@ toolsDir = os.path.join(os.getcwd(), "tools")
 
 class Downloader(QThread):
 
-    def __init__(self, url, filename):
+    setTotalProgress = Signal(int)
+    setCurrentProgress = Signal(int)
+
+    def __init__(self, files):
         super().__init__()
-        self._url = url
-        self._filename = filename
+        self._files = files
 
     def run(self):
-        # Open the URL address.
-        with urlopen(self._url) as r:
-            with open(self._filename, "wb") as f:
-                # Read the remote file and write the local one.
-                f.write(r.read())
+        for file in self._files:
+            readBytes = 0
+            chunkSize = 1024
+
+            self.setCurrentProgress.emit(0)
+            with urlopen(file[0]) as r:
+                self.setTotalProgress.emit(int(r.info()["Content-Length"]))
+                with open(os.path.join(toolsDir, file[1]), "ab") as f:
+                    while True:
+                        chunk = r.read(chunkSize)
+                        if chunk is None:
+                            continue
+                        elif chunk == b"":
+                            break
+                        f.write(chunk)
+                        readBytes += chunkSize
+                        self.setCurrentProgress.emit(readBytes)
+                print("Downloaded file {}".format(file[1]))
+
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -60,24 +77,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ("https://github.com/NinjaCheetah/ASH_Extractor/releases/latest/download/ASH-Linux.tar", "ASH-Linux.tar"),
             ("https://github.com/NinjaCheetah/ASH_Extractor/releases/latest/download/ashcompress.zip", "ashcompress.zip")
         ]
-        downloadFiles(toolsToDownload)
-        """
-        for item in toolsToDownload:
-            readBytes = 0
-            with urlopen(item[0]) as r:
-                self.ui.progressBar.setMaximum(int(r.info()["Content-Length"]))
-                with open(os.path.join(toolsDir, item[1]), "ab") as f:
-                    while True:
-                        QCoreApplication.processEvents()
-                        chunk = r.read(128)
-                        if chunk is None:
-                            continue
-                        elif chunk == b"":
-                            break
-                        f.write(chunk)
-                        readBytes += 128
-                        self.ui.progressBar.setValue(readBytes)
-            print("Downloaded file {} to {}".format(item[0], item[1]))
+        self.downloader = Downloader(toolsToDownload)
+        self.downloader.setTotalProgress.connect(self.ui.progressBar.setMaximum)
+        self.downloader.setCurrentProgress.connect(self.ui.progressBar.setValue)
+        self.downloader.finished.connect(self.downloadFinished)
+        self.downloader.start()
+
+    def downloadFinished(self):
+        self.ui.progressBar.setValue(self.ui.progressBar.maximum())
         with zipfile.ZipFile(os.path.join(toolsDir, "Sharpii.zip"), "r") as zip_ref:
             zip_ref.extractall(toolsDir)
         os.remove(os.path.join(toolsDir, "Sharpii.zip"))
@@ -95,13 +102,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.ui.status_lbl.setText("Ready.")
         self.ui.progressBar.hide()
         self.ui.downloadTools_btn.setEnabled(True)
-        """
-
-    def downloadFinished(self):
-        self.label.setText("¡File downloaded!")
-        # Restore the button.
-        self.ui.downloadTools_btn.setEnabled(True)
-        # Delete the thread when no longer needed.
+        self.ui.status_lbl.setText("Ready.")
         del self.downloader
 
     def selectWAD_btn_pressed(self):
