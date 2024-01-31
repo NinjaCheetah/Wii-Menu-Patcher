@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 
 tools/
+wad/
 *.wad
 
 # C extensions
