@@ -1,11 +1,8 @@
-import os
-import sys
-import urllib
-import threading
+import platform
 
 
 def getToolsIndex():
-    currentOS = sys.platform.system()
+    currentOS = platform.system()
     if currentOS == "Linux":
         return [
             ("https://github.com/mogzol/sharpii/releases/latest/download/Sharpii_v1.7.3.zip", "Sharpii.zip"),

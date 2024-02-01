@@ -6,6 +6,7 @@ __pycache__/
 tools/
 wad/
 *.wad
+cache
 
 # C extensions
 *.so

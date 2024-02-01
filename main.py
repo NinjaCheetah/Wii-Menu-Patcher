@@ -3,13 +3,15 @@ import os
 import zipfile
 import tarfile
 import hashlib
-import asyncio
+import pathlib
+import json
 from urllib.request import urlopen
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog
-from PySide6.QtCore import QCoreApplication, QThread, Signal
+from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox
+from PySide6.QtCore import QThread, Signal, Qt
 
-from qt.py.ui_newui import Ui_MainWindow
+from qt.py.ui_MainMenu import Ui_MainWindow
+from tabs.patch import PatchTab
 
 from data.sysMenuVersions import getMenuVersionCode, getMenuRegionCode
 from plat.prepareTools import getToolsIndex
@@ -64,42 +66,48 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.ui.toolStatus_lbl.setText("Tools ready!")
 
     def downloadTools_btn_pressed(self):
-        self.ui.status_lbl.setText("Downloading tools...")
-        self.ui.downloadTools_btn.setEnabled(False)
-        self.ui.progressBar.show()
-        global toolsDir
-        print("WAD is set to: {}, located at path: {}".format(wadName, wadPath))
-        print(toolsDir)
-        if not os.path.exists(toolsDir):
-            os.makedirs(toolsDir)
-        toolsToDownload = [
-            ("https://github.com/mogzol/sharpii/releases/latest/download/Sharpii_v1.7.3.zip", "Sharpii.zip"),
-            ("https://github.com/NinjaCheetah/ASH_Extractor/releases/latest/download/ASH-Linux.tar", "ASH-Linux.tar"),
-            ("https://github.com/NinjaCheetah/ASH_Extractor/releases/latest/download/ashcompress.zip", "ashcompress.zip")
-        ]
-        self.downloader = Downloader(toolsToDownload)
-        self.downloader.setTotalProgress.connect(self.ui.progressBar.setMaximum)
-        self.downloader.setCurrentProgress.connect(self.ui.progressBar.setValue)
-        self.downloader.finished.connect(self.downloadFinished)
-        self.downloader.start()
+        msgBox = QMessageBox()
+        msgBox.setWindowTitle("Confirm Tools Download")
+        msgBox.setIcon(QMessageBox.Icon.Information)
+        msgBox.setTextFormat(Qt.MarkdownText)
+        msgBox.setText("### This will download the following external tools required for this program.")
+        msgBox.setInformativeText("These programs are all safe to use, however you may inspect where they originate from using the links below if you would prefer to do so. <br /><br />"
+                                  "Sharpii: <a href='https://github.com/mogzol/sharpii'>GitHub Repository</a> <br />"
+                                  "ASH: <a href='https://github.com/NinjaCheetah/ASH_Extractor'>GitHub Repository</a> <br />"
+                                  "ashcompress: <a href='https://gbatemp.net/download/ash-compressor.34055/'>GBATemp</a> <br")
+        msgBox.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
+        msgBox.setDefaultButton(QMessageBox.StandardButton.Ok)
+        ret = msgBox.exec()
+        if ret == QMessageBox.StandardButton.Ok:
+            self.ui.status_lbl.setText("Downloading tools...")
+            self.ui.downloadTools_btn.setEnabled(False)
+            self.ui.progressBar.show()
+            global toolsDir
+            if not os.path.exists(toolsDir):
+                os.makedirs(toolsDir)
+            toolsToDownload = getToolsIndex()
+            self.downloader = Downloader(toolsToDownload)
+            self.downloader.setTotalProgress.connect(self.ui.progressBar.setMaximum)
+            self.downloader.setCurrentProgress.connect(self.ui.progressBar.setValue)
+            self.downloader.finished.connect(self.downloadFinished)
+            self.downloader.start()
+        elif ret == QMessageBox.StandardButton.Cancel:
+            return
 
     def downloadFinished(self):
         self.ui.progressBar.setValue(self.ui.progressBar.maximum())
-        with zipfile.ZipFile(os.path.join(toolsDir, "Sharpii.zip"), "r") as zip_ref:
-            zip_ref.extractall(toolsDir)
-        os.remove(os.path.join(toolsDir, "Sharpii.zip"))
-        print("Sharpii is ready at {}".format(os.path.join(toolsDir, "Sharpii.exe")))
-        with tarfile.TarFile(os.path.join(toolsDir, "ASH-Linux.tar"), "r") as tar_ref:
-            tar_ref.extractall(toolsDir)
-        os.remove(os.path.join(toolsDir, "ASH-Linux.tar"))
-        print("ASH is ready at {}".format(os.path.join(toolsDir, "ASH")))
-        with zipfile.ZipFile(os.path.join(toolsDir, "ashcompress.zip"), "r") as zip_ref:
-            zip_ref.extractall(toolsDir)
-        os.remove(os.path.join(toolsDir, "ashcompress.zip"))
-        print("ASHcompress ready at {}".format(os.path.join(toolsDir, "ashcompress.exe")))
+        toolsList = getToolsIndex()
+        for tool in toolsList:
+            if pathlib.Path(tool[1]).suffix == ".zip":
+                with zipfile.ZipFile(os.path.join(toolsDir, tool[1])) as fileToUnzip:
+                    fileToUnzip.extractall(toolsDir)
+            elif pathlib.Path(tool[1]).suffix == ".tar":
+                with tarfile.TarFile(os.path.join(toolsDir, tool[1])) as fileToUntar:
+                    fileToUntar.extractall(toolsDir)
+            os.remove(os.path.join(toolsDir, tool[1]))
+            print("Unzipped tool: {}".format(tool[1]))
         # Tools are now ready!
-        print("Tools ready! Unlocking UI")
-        self.ui.status_lbl.setText("Ready.")
+        self.ui.toolStatus_lbl.setText("Tools ready!")
         self.ui.progressBar.hide()
         self.ui.downloadTools_btn.setEnabled(True)
         self.ui.status_lbl.setText("Ready.")
@@ -112,18 +120,42 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             wadPath = inc_filePath[0]
             global wadName
             wadName = os.path.basename(wadPath).split('/')[-1]
+            wadData = {"version": "", "region": "", "hash": ""}
             with open(wadPath, 'rb', buffering=0) as f:
-                wadHash = hashlib.file_digest(f, 'md5').hexdigest()
-            wadVersion = getMenuVersionCode(wadHash)
-            wadRegion = getMenuRegionCode(wadHash)
-            if wadVersion != "Unknown Version":
-                self.ui.WADstatus_lbl.setText(f"**WAD selected:** {wadName} <br />"
-                                              f"**Identified version:** {wadVersion} <br />"
-                                              f"**Identified region:** {wadRegion}")
+                wadData["hash"] = hashlib.file_digest(f, 'md5').hexdigest()
+            wadData["version"] = getMenuVersionCode(wadData["hash"])
+            wadData["region"] = getMenuRegionCode(wadData["hash"])
+            with open("cache.json", 'w', encoding='utf-8') as file:
+                json.dump(wadData, file, ensure_ascii=False)
+            self.ui.tabWidget.addTab(PatchTab(), "Patch")
+            if wadData["version"] != "Unknown Version":
+                self.ui.WADstatus_lbl.setText("**WAD selected:** {} <br />"
+                                              "**Identified version:** {} <br />"
+                                              "**Identified region:** {}"
+                                              .format(wadName, wadData["version"], wadData["region"]))
+                msgBox = QMessageBox()
+                msgBox.setWindowTitle("Ready for Patching")
+                msgBox.setIcon(QMessageBox.Icon.Information)
+                msgBox.setTextFormat(Qt.MarkdownText)
+                msgBox.setText("### WAD loaded successfully!")
+                msgBox.setInformativeText("You may now apply patches using the \"Patch\" tab.")
+                msgBox.setStandardButtons(QMessageBox.StandardButton.Ok)
+                msgBox.setDefaultButton(QMessageBox.StandardButton.Ok)
+                msgBox.exec()
             else:
                 self.ui.WADstatus_lbl.setText(f"**WAD selected:** {wadName} <br />"
                                               f"**Identified version:** Unknown version! <br />"
                                               f"**Identified region:** Unknown region!")
+                msgBox = QMessageBox()
+                msgBox.setWindowTitle("WAD Not Recognized")
+                msgBox.setIcon(QMessageBox.Icon.Warning)
+                msgBox.setTextFormat(Qt.MarkdownText)
+                msgBox.setText("### The WAD you provided could not be recognized!")
+                msgBox.setInformativeText("You may still attempt to apply patches using the \"Patch\" tab, however some patches may not work as expected. <br /> <br />"
+                                          "Please be careful when using any WADs created from the WAD provided, as incorrectly applied patches could prevent the system from booting.")
+                msgBox.setStandardButtons(QMessageBox.StandardButton.Ok)
+                msgBox.setDefaultButton(QMessageBox.StandardButton.Ok)
+                msgBox.exec()
 
 
 if __name__ == "__main__":
@@ -131,5 +163,8 @@ if __name__ == "__main__":
 
     window = MainWindow()
     window.show()
+
+    if os.path.exists("cache.json"):
+        os.remove("cache.json")
 
     sys.exit(app.exec())
