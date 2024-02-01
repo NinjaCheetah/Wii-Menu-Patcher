@@ -34,8 +34,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     - name: Build Package
-      run: |
-        nuitka3 --standalone --plugin-enable=pyside6 main.py
+      uses: Nuitka/Nuitka-Action@main
+      with:
+        nuitka-version: main
+        script-name: main.py
+        standalone: true
+        enable-plugins: pyside6
     - name: Prepare Package for Upload
       run: |
         mkdir ~/Wii-Menu-Patcher-linux-bin
@@ -67,10 +71,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     - name: Build Package
-      run: |
-        nuitka --standalone --plugin-enable=pyside6 main.py --disable-console
-        cd main.dist
-        dir
+      uses: Nuitka/Nuitka-Action@main
+      with:
+        nuitka-version: main
+        script-name: main.py
+        standalone: true
+        enable-plugins: pyside6
+        disable-console: true
     - name: Upload Package
       uses: actions/upload-artifact@v4.3.0
       with:
