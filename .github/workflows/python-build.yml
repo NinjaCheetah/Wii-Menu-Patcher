@@ -40,12 +40,10 @@ jobs:
       run: |
         mkdir ~/Wii-Menu-Patcher-linux-bin
         mv main.dist/* ~/Wii-Menu-Patcher-linux-bin
-        cd ~
-        tar -cvf Wii-Menu-Patcher-linux-bin.tar Wii-Menu-Patcher-linux-bin/
     - name: Upload Package
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4.3.0
       with:
-        path: ~/Wii-Menu-Patcher-linux-bin.tar
+        path: ~/Wii-Menu-Patcher-linux-bin
         name: Wii-Menu-Patcher-linux-bin
 
   build-windows:
@@ -75,11 +73,9 @@ jobs:
       run: |
         mkdir D:\a\Wii-Menu-Patcher\Wii-Menu-Patcher-windows-bin
         mv D:\a\Wii-Menu-Patcher\Wii-Menu-Patcher\main.dist\* D:\a\Wii-Menu-Patcher\Wii-Menu-Patcher-windows-bin
-        cd D:\a\Wii-Menu-Patcher
-        7z a -tzip Wii-Menu-Patcher-windows-bin.zip Wii-Menu-Patcher-windows-bin\*
     - name: Upload Package
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4.3.0
       with:
-        path: D:\a\Wii-Menu-Patcher\Wii-Menu-Patcher-windows-bin.zip
+        path: D:\a\Wii-Menu-Patcher\Wii-Menu-Patcher-windows-bin
         name: Wii-Menu-Patcher-windows-bin
 
