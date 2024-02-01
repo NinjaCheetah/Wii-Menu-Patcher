@@ -19,6 +19,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Install ccache for Nuitka
+      run: sudo apt update && sudo apt install -y ccache
     - name: Set up Python 3.11
       uses: actions/setup-python@v3
       with:
@@ -35,7 +37,7 @@ jobs:
       run: |
         nuitka3 --standalone --plugin-enable=pyside6 main.py
     - name: Prepare Package for Upload
-      run:
+      run: |
         mkdir ~/Wii-Menu-Patcher-bin
         mv main.dist/* ~/Wii-Menu-Patcher-bin
         cd ~
