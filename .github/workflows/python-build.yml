@@ -20,7 +20,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Install ccache for Nuitka
-      run: sudo apt update && sudo apt install -y ccache
+      run: sudo apt update && sudo apt install -y ccache libicu-dev
     - name: Set up Python 3.11
       uses: actions/setup-python@v5
       with:
@@ -69,6 +69,8 @@ jobs:
     - name: Build Package
       run: |
         nuitka --standalone --plugin-enable=pyside6 main.py --disable-console
+        cd main.dist
+        dir
     - name: Upload Package
       uses: actions/upload-artifact@v4.3.0
       with:
