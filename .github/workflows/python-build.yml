@@ -69,13 +69,9 @@ jobs:
     - name: Build Package
       run: |
         nuitka --standalone --plugin-enable=pyside6 main.py --disable-console
-    - name: Prepare Package for Upload
-      run: |
-        mkdir D:\a\Wii-Menu-Patcher\Wii-Menu-Patcher-windows-bin
-        mv D:\a\Wii-Menu-Patcher\Wii-Menu-Patcher\main.dist\* D:\a\Wii-Menu-Patcher\Wii-Menu-Patcher-windows-bin
     - name: Upload Package
       uses: actions/upload-artifact@v4.3.0
       with:
-        path: D:\a\Wii-Menu-Patcher\Wii-Menu-Patcher-windows-bin
+        path: D:\a\Wii-Menu-Patcher\Wii-Menu-Patcher\main.dist\
         name: Wii-Menu-Patcher-windows-bin
 
