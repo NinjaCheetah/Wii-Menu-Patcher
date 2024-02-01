@@ -13,16 +13,16 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  build-linux:
 
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Install ccache for Nuitka
       run: sudo apt update && sudo apt install -y ccache
     - name: Set up Python 3.11
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: "3.11"
     - name: Install Qt 6
@@ -38,13 +38,48 @@ jobs:
         nuitka3 --standalone --plugin-enable=pyside6 main.py
     - name: Prepare Package for Upload
       run: |
-        mkdir ~/Wii-Menu-Patcher-bin
-        mv main.dist/* ~/Wii-Menu-Patcher-bin
+        mkdir ~/Wii-Menu-Patcher-linux-bin
+        mv main.dist/* ~/Wii-Menu-Patcher-linux-bin
         cd ~
-        tar -cvf Wii-Menu-Patcher-bin.tar.gz Wii-Menu-Patcher-bin/
+        tar -cvf Wii-Menu-Patcher-linux-bin.tar Wii-Menu-Patcher-linux-bin/
     - name: Upload Package
       uses: actions/upload-artifact@v3
       with:
-        path: ~/Wii-Menu-Patcher-bin.tar.gz
-        name: Wii-Menu-Patcher-bin
+        path: ~/Wii-Menu-Patcher-linux-bin.tar
+        name: Wii-Menu-Patcher-linux-bin
+
+  build-windows:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Enable Developer Command Prompt
+      uses: ilammy/msvc-dev-cmd@v1.13.0
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+    - name: Install Qt 6
+      uses: jurplel/install-qt-action@v3.3.0
+      with:
+        version: "6.6.*"
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Build Package
+      run: |
+        nuitka --standalone --plugin-enable=pyside6 main.py --disable-console
+    - name: Prepare Package for Upload
+      run: |
+        mkdir D:\a\Wii-Menu-Patcher\Wii-Menu-Patcher-windows-bin
+        mv D:\a\Wii-Menu-Patcher\Wii-Menu-Patcher\main.dist\* D:\a\Wii-Menu-Patcher\Wii-Menu-Patcher-windows-bin
+        cd D:\a\Wii-Menu-Patcher
+        7z a -tzip Wii-Menu-Patcher-windows-bin.zip Wii-Menu-Patcher-windows-bin\*
+    - name: Upload Package
+      uses: actions/upload-artifact@v3
+      with:
+        path: D:\a\Wii-Menu-Patcher\Wii-Menu-Patcher-windows-bin.zip
+        name: Wii-Menu-Patcher-windows-bin
 
