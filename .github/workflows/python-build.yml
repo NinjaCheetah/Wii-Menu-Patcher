@@ -32,7 +32,7 @@ jobs:
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install -r requirements.txt
     - name: Build Package
       run: |
         nuitka3 --standalone --plugin-enable=pyside6 main.py
@@ -67,7 +67,7 @@ jobs:
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install -r requirements.txt
     - name: Build Package
       run: |
         nuitka --standalone --plugin-enable=pyside6 main.py --disable-console
