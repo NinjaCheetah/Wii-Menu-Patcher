@@ -38,3 +38,9 @@ nuitka3 --standalone --plugin-enable=pyside6 main.py
 ```
 
 The resulting build will be in `main.dist`. On Windows, you'll have an executable named `main.exe`, and on Linux you'll have an executable named `main.bin`. All required libraries for the program are located inside the `main.dist` directory, so you can use it on a different system without installing any dependencies.
+
+## Credits
+This program wouldn't be possible without the following external tools.
+- **Sharpii** by [@mogzol](https://github.com/mogzol), [https://github.com/mogzol/sharpii](https://github.com/mogzol/sharpii)
+- **ASH** by crediar, updated at [https://github.com/NinjaCheetah/ASH_Extractor](https://github.com/NinjaCheetah/ASH_Extractor)
+- **ashcompress** by unknown
