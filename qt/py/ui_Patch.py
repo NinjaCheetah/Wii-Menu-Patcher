@@ -42,7 +42,7 @@ class Ui_Patch(object):
         self.label_2 = QLabel(Patch)
         self.label_2.setObjectName(u"label_2")
         font1 = QFont()
-        font1.setPointSize(12)
+        font1.setPointSize(11)
         self.label_2.setFont(font1)
 
         self.verticalLayout_3.addWidget(self.label_2)
@@ -61,7 +61,7 @@ class Ui_Patch(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label_3.sizePolicy().hasHeightForWidth())
         self.label_3.setSizePolicy(sizePolicy)
-        self.label_3.setMaximumSize(QSize(16777215, 16777215))
+        self.label_3.setMaximumSize(QSize(145, 16777215))
         self.label_3.setWordWrap(True)
 
         self.verticalLayout_3.addWidget(self.label_3)

@@ -130,6 +130,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             wadData["region"] = getMenuRegionCode(wadData["hash"])
             with open("cache.json", 'w', encoding='utf-8') as file:
                 json.dump(wadData, file, ensure_ascii=False)
+            if self.ui.tabWidget.count() > 1:
+                for tab in range(1, self.ui.tabWidget.count()):
+                    self.ui.tabWidget.removeTab(tab)
             self.ui.tabWidget.addTab(PatchTab(), "Patch")
             if wadData["version"] != "Unknown Version":
                 self.ui.WADstatus_lbl.setText("**WAD selected:** {} <br />"
