@@ -5,7 +5,7 @@ import tarfile
 import hashlib
 import pathlib
 import json
-from urllib.request import urlopen
+import urllib3
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox
 from PySide6.QtCore import QThread, Signal, Qt
@@ -31,24 +31,27 @@ class Downloader(QThread):
         self._files = files
 
     def run(self):
+        http = urllib3.PoolManager()
+
         for file in self._files:
             readBytes = 0
             chunkSize = 1024
 
             self.setCurrentProgress.emit(0)
-            with urlopen(file[0]) as r:
-                self.setTotalProgress.emit(int(r.info()["Content-Length"]))
-                with open(os.path.join(toolsDir, file[1]), "ab") as f:
-                    while True:
-                        chunk = r.read(chunkSize)
-                        if chunk is None:
-                            continue
-                        elif chunk == b"":
-                            break
-                        f.write(chunk)
-                        readBytes += chunkSize
-                        self.setCurrentProgress.emit(readBytes)
+            r = http.request('GET', file[0], preload_content=False)
+            self.setTotalProgress.emit(int(r.info()["Content-Length"]))
+
+            with open(os.path.join(toolsDir, file[1]), 'wb') as out:
+                while True:
+                    data = r.read(chunkSize)
+                    if not data:
+                        break
+                    out.write(data)
+                    readBytes += chunkSize
+                    self.setCurrentProgress.emit(readBytes)
                 print("Downloaded file {}".format(file[1]))
+
+            r.release_conn()
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
