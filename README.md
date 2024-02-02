@@ -3,6 +3,9 @@ A cross-platform tool for applying patches to the Wii System Menu, done by extra
 
 [![Python application](https://github.com/NinjaCheetah/Wii-Menu-Patcher/actions/workflows/python-build.yml/badge.svg)](https://github.com/NinjaCheetah/Wii-Menu-Patcher/actions/workflows/python-build.yml)
 
+> [!IMPORTANT]  
+> This program is in its very early stages right now! No patching features are actually present, but the UI is fairly fleshed out at this point. If you're interested in testing the UI and WAD-loading features, you can download [the UI demo release](https://github.com/NinjaCheetah/Wii-Menu-Patcher/releases/v0.1/) or the [latest Actions build](https://github.com/NinjaCheetah/Wii-Menu-Patcher/actions/workflows/python-build.yml). Issues are welcome on any strange UI behavior exhibited in these builds.
+
 ### System Requirements
 **Windows:** 
 - 8.1 or newer (required for Python > 3.9)
